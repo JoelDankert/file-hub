@@ -80,7 +80,32 @@ async function openFile(item, button) {
       button.className = 'file';
       button.textContent = item.name;
       button.addEventListener('click', () => openFile(item, button));
-      row.append(button);
+      const actions = document.createElement('div');
+      actions.className = 'row-actions';
+      const link = document.createElement('a');
+      link.href = 'files/' + item.file;
+      link.download = item.name;
+      link.textContent = 'Download';
+      link.setAttribute('aria-label', `${item.name} herunterladen`);
+      actions.append(link);
+      if (item.kind === 'text') {
+        const copyButton = document.createElement('button');
+        copyButton.type = 'button';
+        copyButton.textContent = 'Kopieren';
+        copyButton.setAttribute('aria-label', `${item.name} kopieren`);
+        copyButton.addEventListener('click', async () => {
+          try {
+            const response = await fetch('files/' + item.file);
+            if (!response.ok) throw new Error();
+            await navigator.clipboard.writeText(await response.text());
+            message.textContent = '';
+            copyButton.textContent = 'Kopiert';
+            setTimeout(() => { copyButton.textContent = 'Kopieren'; }, 1500);
+          } catch { message.textContent = 'Kopieren fehlgeschlagen.'; }
+        });
+        actions.append(copyButton);
+      }
+      row.append(button, actions);
       list.append(row);
     }
     if (!list.children.length) message.textContent = 'Keine Dateien.';
