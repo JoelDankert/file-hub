@@ -9,9 +9,13 @@ const copy = document.querySelector('#copy');
 let current = 0;
 let text = '';
 let opener;
+let copyTimer;
+let copyRequest = 0;
 
 function closeViewer() {
   current++;
+  copyRequest++;
+  clearTimeout(copyTimer);
   viewer.hidden = true;
   list.hidden = false;
   content.replaceChildren();
@@ -24,14 +28,23 @@ document.querySelector('#back').addEventListener('click', () => {
   else closeViewer();
 });
 copy.addEventListener('click', async () => {
+  const request = ++copyRequest;
+  const id = current;
   try {
     await navigator.clipboard.writeText(text);
+    if (id !== current || request !== copyRequest) return;
+    clearTimeout(copyTimer);
     copy.textContent = 'Kopiert';
     message.textContent = '';
-  } catch { message.textContent = 'Kopieren fehlgeschlagen.'; }
+    copyTimer = setTimeout(() => { copy.textContent = 'Kopieren'; }, 1500);
+  } catch {
+    if (id === current && request === copyRequest) message.textContent = 'Kopieren fehlgeschlagen.';
+  }
 });
 async function openFile(item, button) {
   const id = ++current;
+  copyRequest++;
+  clearTimeout(copyTimer);
   opener = button;
   text = '';
   list.hidden = true;
