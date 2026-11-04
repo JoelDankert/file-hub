@@ -9,7 +9,7 @@ import shutil
 import tempfile
 
 ROOT = Path(__file__).resolve().parent
-TEXT = {'.txt', '.md', '.csv', '.json', '.log'}
+TEXT = {'.txt', '.md', '.csv', '.json', '.log', '.ino', '.c', '.cpp', '.h', '.hpp', '.py', '.sh', '.js', '.ts', '.html', '.css', '.yaml', '.yml', '.xml', '.sql', '.java', '.kt', '.rs', '.ahk', '.ps1'}
 IMAGES = {'.png', '.jpg', '.jpeg', '.gif', '.webp', '.avif'}
 
 def main():
