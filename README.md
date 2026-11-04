@@ -1,22 +1,11 @@
 # Datei-Hub
 
-**Öffentlich:** Jede veröffentlichte Datei und frühere Git-Version ist weltweit abrufbar. Keine vertraulichen Dateien verwenden. Nur ausdrücklich freigegebene Dateien hinzufügen. Löschen aus der aktuellen Version löscht nicht die Git-Historie.
+GitHub Pages und die gesamte Git-Historie sind öffentlich. Der aktuelle Index und die Dateien werden lokal mit AES-256-GCM verschlüsselt; der Schlüssel wird mit PBKDF2-SHA-256 (600.000 Iterationen und zufälligem Salt) aus dem Passwort abgeleitet. Jede Verschlüsselung verwendet einen zufälligen Nonce. Ein schwaches Passwort kann offline erraten werden; Webseiten-Code und Metadaten wie Dateigrößen bleiben öffentlich. Ein kompromittierter Host kann den Code verändern und Passwörter abfangen. Bereits veröffentlichte Klartextdateien, darunter RC522_Test.ino, bleiben in der Git-Historie öffentlich. Das ist kein rückwirkender Schutz.
 
-## Datei hinzufügen
+## Dateien hinzufügen
 
-```sh
-cd /home/joeld/file-hub
-python3 add-file.py /pfad/zur/ausdruecklich-freigegebenen-datei.txt
-git status --short
-git diff -- manifest.json
-# Neue Dateien im Ordner files/ vor Veröffentlichung prüfen!
-git add manifest.json files/
-git commit -m 'Add public file'
-git push
-```
+Nur ausdrücklich ausgewählte Dateien veröffentlichen. Dateien in `/home/joeld/file-hub-inbox/` ablegen und mit `file-hub-publish --confirm-public DATEINAME` veröffentlichen. Das lokale Passwort liegt ausschließlich in `/home/joeld/.hermes/private/file-hub-password` (Dateimodus 600); es darf nicht in Git oder Befehlsargumente gelangen. Das Hilfsprogramm verschlüsselt die Datei und den Index, veröffentlicht ausschließlich Chiffrat und prüft die Live-Version. Die Dateien im Eingang bleiben erhalten. Den Link zur Website und das Passwort getrennt übermitteln.
 
-Texte (.txt, .md, .csv, .json, .log) können kopiert werden, Rasterbilder werden als Vorschau angezeigt. Andere Dateien werden zum Download angeboten. Keine serverseitigen Uploads; GitHub Pages ist statisch. Die kryptischen Dateinamen sind kein Zugriffsschutz. Große Dateien unterliegen GitHubs Größenlimits.
+Texte können kopiert, Rasterbilder angezeigt und Dateien heruntergeladen werden. GitHub-Größenlimits gelten auch für verschlüsselte Daten.
 
-## Erstveröffentlichung
-
-Repository `JoelDankert/file-hub` öffentlich erstellen, `main` pushen und GitHub Pages unter Settings → Pages aus Branch `main`, Ordner `/ (root)` aktivieren. URL: https://joeldankert.github.io/file-hub/ . GitHub Pages benötigt eventuell einige Minuten.
+Nach erfolgreichem Entsperren wird das Passwort dauerhaft im localStorage dieses Browserprofils gespeichert und beim erneuten Besuch automatisch verwendet. Jeder mit Zugriff auf dieses Browserprofil kann das Passwort und die Dateien lesen. Das Löschen der Seitendaten entfernt das gespeicherte Passwort; auf anderen Geräten oder in anderen Browserprofilen muss es erneut eingegeben werden. Ist localStorage deaktiviert, funktioniert das manuelle Entsperren weiterhin.
