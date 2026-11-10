@@ -69,7 +69,7 @@ function render(entries) {
         const a = document.createElement('a'); a.href = url; a.download = item.name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 60000);
       } catch { message.textContent = 'Download fehlgeschlagen.'; }
     });
-    actions.append(link);
+    // Copy precedes download, matching the preview controls.
     if (item.kind === 'text') {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = 'Kopieren'; b.setAttribute('aria-label', `${item.name} kopieren`);
       b.addEventListener('click', async () => {
@@ -77,18 +77,30 @@ function render(entries) {
         catch { message.textContent = 'Kopieren fehlgeschlagen.'; }
       }); actions.append(b);
     }
+    actions.append(link);
     row.append(button, actions); list.append(row);
   }
   if (!list.children.length) message.textContent = 'Keine Dateien.';
 }
 const storageKey = 'file-hub-password-v1';
+document.querySelector('#logout').addEventListener('click', () => {
+  try { localStorage.removeItem(storageKey); } catch { /* storage is optional */ }
+  password = ''; text = ''; current++; copyRequest++; clearTimeout(copyTimer);
+  if (objectURL) URL.revokeObjectURL(objectURL);
+  objectURL = null; content.replaceChildren(); list.replaceChildren();
+  viewer.hidden = true; document.querySelector('#session').hidden = true;
+  download.removeAttribute('href'); filename.textContent = ''; message.textContent = '';
+  // A fresh document discards all pending decrypt/download/clipboard callbacks.
+  history.replaceState(null, '');
+  location.reload();
+});
 async function unlock(value) {
   password = value;
   const submit = form.querySelector('button'); submit.disabled = true; message.textContent = 'Entschlüsseln …';
   try {
     const response = await fetch('manifest.json', {cache:'no-store'}); if (!response.ok) throw Error('fetch');
     const entries = JSON.parse(new TextDecoder().decode(await decrypt(await response.json())));
-    if (!Array.isArray(entries)) throw Error('invalid'); render(entries); form.hidden = true; message.textContent = '';
+    if (!Array.isArray(entries)) throw Error('invalid'); render(entries); form.hidden = true; document.querySelector('#session').hidden = false; message.textContent = '';
     try { localStorage.setItem(storageKey, value); } catch { /* storage is optional */ }
     if (!entries.length) message.textContent = 'Keine Dateien.';
   } catch {
