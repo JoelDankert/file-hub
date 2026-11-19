@@ -3,6 +3,36 @@ const list = document.querySelector('#files'), viewer = document.querySelector('
 const message = document.querySelector('#message'), filename = document.querySelector('#filename');
 const content = document.querySelector('#content'), download = document.querySelector('#download');
 const copy = document.querySelector('#copy'), form = document.querySelector('#unlock');
+const session = document.querySelector('#session'), search = document.querySelector('#file-search');
+const searchToggle = document.querySelector('#search-toggle'), searchInput = document.querySelector('#search-input');
+const searchName = value => value.normalize('NFKC').toLocaleLowerCase('de');
+function filterFiles() {
+  const query = searchName(searchInput.value.trim());
+  let matches = 0;
+  for (const row of list.children) {
+    row.hidden = !row.dataset.searchName.includes(query);
+    if (!row.hidden) matches++;
+  }
+  if (!list.hidden) message.textContent = !list.children.length ? 'Keine Dateien.' : matches ? '' : 'Keine Treffer.';
+}
+function closeSearch(restoreFocus = false) {
+  if (searchInput.hidden) return;
+  searchInput.value = ''; searchInput.hidden = true;
+  session.classList.remove('searching'); searchToggle.setAttribute('aria-expanded', 'false');
+  filterFiles();
+  if (restoreFocus) searchToggle.focus({preventScroll:true});
+}
+searchToggle.addEventListener('click', () => {
+  if (!searchInput.hidden) { closeSearch(true); return; }
+  session.classList.add('searching'); searchInput.hidden = false;
+  searchToggle.setAttribute('aria-expanded', 'true'); searchInput.focus({preventScroll:true});
+});
+searchInput.addEventListener('input', filterFiles);
+search.addEventListener('keydown', event => {
+  if (event.key === 'Escape') { event.preventDefault(); closeSearch(true); }
+});
+document.addEventListener('click', event => { if (!search.contains(event.target)) closeSearch(); });
+search.addEventListener('focusout', event => { if (event.relatedTarget && !search.contains(event.relatedTarget)) closeSearch(); });
 let password = '', current = 0, text = '', opener, copyTimer, copyRequest = 0, objectURL;
 const bytes = value => Uint8Array.from(atob(value), c => c.charCodeAt(0));
 async function decrypt(envelope) {
@@ -60,6 +90,7 @@ function render(entries) {
   for (const item of entries) {
     if (!item || typeof item.name !== 'string' || typeof item.file !== 'string' || !/^[a-f0-9]{32}\.enc$/.test(item.file) || !['text','image','file'].includes(item.kind)) throw Error('invalid index');
     const row = document.createElement('li'), button = document.createElement('button'), actions = document.createElement('div');
+    row.dataset.searchName = searchName(item.name);
     button.type = 'button'; button.className = 'file'; button.textContent = item.name; button.addEventListener('click', () => openFile(item, button));
     actions.className = 'row-actions';
     const link = document.createElement('button'); link.type = 'button'; link.textContent = 'Download'; link.setAttribute('aria-label', `${item.name} herunterladen`);
